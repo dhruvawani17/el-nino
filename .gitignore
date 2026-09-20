@@ -1,0 +1,25 @@
+node_modules
+dist
+dist-ssr
+*.local
+*.log
+.DS_Store
+.vscode
+.idea
+
+# Vite cache
+.vite
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+
+# Old backend (replaced by api/)
+backend/
+
+# Generated on build, not source
+public/icons.svg
+src/assets/hero.png
+src/assets/react.svg
+src/assets/vite.svg
