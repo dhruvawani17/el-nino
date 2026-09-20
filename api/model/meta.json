@@ -1,0 +1,39 @@
+{
+  "regions": [
+    "Andhra Pradesh",
+    "Assam",
+    "Bihar",
+    "Chhattisgarh",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Jharkhand",
+    "Karnataka",
+    "Kerala",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Odisha",
+    "Punjab",
+    "Rajasthan",
+    "Tamil Nadu",
+    "Telangana",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal"
+  ],
+  "features": [
+    "oni_value",
+    "rainfall_deviation",
+    "temperature_anomaly",
+    "drought_index",
+    "crop_production_index",
+    "crop_yield_tons_ha",
+    "agricultural_loss_pct",
+    "irrigation_coverage_pct",
+    "malnutrition_pct",
+    "food_security_index",
+    "infant_mortality_rate",
+    "stunting_pct"
+  ],
+  "model_type": "sklearn.GradientBoosting"
+}

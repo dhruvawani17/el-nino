@@ -1,54 +1,30 @@
 """
 El Nino Risk Intelligence - Vercel Serverless API
-Model artifacts are loaded from /public/model/ via CDN.
+Model artifacts bundled in api/model/.
 """
-import json, os, pickle, urllib.request
+import json, pickle
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse
 
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.preprocessing import LabelEncoder
 
-_model_dir = None
 _artifacts = None
 _dataset = None
 
-
-def _get_model_dir():
-    global _model_dir
-    if _model_dir:
-        return _model_dir
-    # In Vercel, /public is served at the root URL
-    # For local dev, read from filesystem
-    local = Path(__file__).parent.parent / "public" / "model"
-    if local.exists():
-        _model_dir = local
-        return _model_dir
-    # Fallback: create tmp dir and download
-    _model_dir = Path("/tmp/model")
-    _model_dir.mkdir(exist_ok=True)
-    base = os.environ.get("VERCEL_URL", "localhost:5173")
-    proto = "https" if "vercel" in base else "http"
-    for f in ["model.pkl", "full.csv", "meta.json", "metrics.json"]:
-        url = f"{proto}://{base}/model/{f}"
-        try:
-            urllib.request.urlretrieve(url, _model_dir / f)
-        except Exception:
-            pass
-    return _model_dir
+MODEL_DIR = Path(__file__).parent / "model"
 
 
 def _load():
     global _artifacts, _dataset
     if _artifacts:
         return
-    d = _get_model_dir()
-    with open(d / "model.pkl", "rb") as f:
+    with open(MODEL_DIR / "model.pkl", "rb") as f:
         _artifacts = pickle.load(f)
-    _dataset = pd.read_csv(d / "full.csv")
+    _dataset = pd.read_csv(MODEL_DIR / "full.csv")
 
 
 RISK_CATS = [(25, "Low"), (45, "Moderate"), (65, "High"), (100, "Critical")]
