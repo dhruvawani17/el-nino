@@ -9,7 +9,7 @@ from urllib.parse import urlparse, parse_qs
 
 import numpy as np
 import pandas as pd
-from xgboost import XGBRegressor
+from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.preprocessing import LabelEncoder
 
 _model_dir = None

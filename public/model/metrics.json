@@ -1,9 +1,7 @@
 {
-  "mae": 2.795,
-  "rmse": 3.555,
-  "r2": 0.923,
-  "cv_r2_mean": 0.907,
-  "cv_r2_std": 0.004,
-  "train_samples": 480,
-  "test_samples": 120
+  "r2": 0.924,
+  "mae": 2.815,
+  "train_size": 480,
+  "test_size": 120,
+  "model_type": "GradientBoosting"
 }
