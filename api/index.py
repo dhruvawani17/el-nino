@@ -5,7 +5,7 @@ Model artifacts bundled in api/model/.
 import json, pickle
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 
 import numpy as np
 import pandas as pd
@@ -18,28 +18,61 @@ _dataset = None
 MODEL_DIR = Path(__file__).parent / "model"
 
 
+_thresholds_cache = None
+
+
 def _load():
-    global _artifacts, _dataset
+    global _artifacts, _dataset, _thresholds_cache
     if _artifacts:
         return
     with open(MODEL_DIR / "model.pkl", "rb") as f:
         _artifacts = pickle.load(f)
     _dataset = pd.read_csv(MODEL_DIR / "full.csv")
+    _thresholds_cache = None
 
 
-RISK_CATS = [(25, "Low"), (45, "Moderate"), (65, "High"), (100, "Critical")]
+def _get_thresholds():
+    global _thresholds_cache, _dataset
+    if _thresholds_cache is not None:
+        return _thresholds_cache
+    _load()
+    means = _dataset.groupby("region")["risk_score"].mean().round(1)
+    r_low = float(means.quantile(0.333))
+    r_high = float(means.quantile(0.667))
+    scores = _dataset["risk_score"]
+    s_low = float(scores.quantile(0.333))
+    s_high = float(scores.quantile(0.667))
+    _thresholds_cache = ((r_low, r_high), (s_low, s_high))
+    return _thresholds_cache
+
+
+def _region_risk_cat(avg_score):
+    (r_low, r_high), _ = _get_thresholds()
+    if avg_score <= r_low:
+        return "Low"
+    elif avg_score <= r_high:
+        return "Moderate"
+    else:
+        return "High"
+
+
+def _risk_cat(score):
+    _, (s_low, s_high) = _get_thresholds()
+    if score <= s_low:
+        return "Low"
+    elif score <= s_high:
+        return "Moderate"
+    elif score >= 50.0:
+        return "Critical"
+    else:
+        return "High"
+
+
 FEAT_GROUPS = {
     "Climate": ["oni_value", "rainfall_deviation", "temperature_anomaly", "drought_index"],
     "Agriculture": ["crop_production_index", "crop_yield_tons_ha", "agricultural_loss_pct", "irrigation_coverage_pct"],
     "Health & Food Security": ["malnutrition_pct", "food_security_index", "infant_mortality_rate", "stunting_pct"],
 }
-
-
-def _risk_cat(s):
-    for t, c in RISK_CATS:
-        if s < t:
-            return c
-    return "Critical"
 
 
 def _predict(inp):
@@ -48,8 +81,9 @@ def _predict(inp):
     le = _artifacts["label_encoder"]
     fnames = _artifacts["feature_columns"]
     fimp = _artifacts["feature_importance"]
-    region = inp["region"]
-    year = inp.get("year", 2024)
+    region = inp.get("region", "")
+    defaults = _region_defaults(region) or {}
+    year = inp.get("year", defaults.get("year", 2026))
     re = le.transform([region])[0] if region in le.classes_ else -1
     vec = []
     for fn in fnames:
@@ -58,17 +92,18 @@ def _predict(inp):
         elif fn == "year":
             vec.append(year)
         else:
-            vec.append(inp.get(fn, 0))
+            vec.append(inp.get(fn, defaults.get(fn, 0)))
     score = float(model.predict(np.array([vec]))[0])
     score = max(0.0, min(100.0, score))
     contribs = []
     for fn in fnames:
         if fn in ("region_enc", "year"):
             continue
+        val = inp.get(fn, defaults.get(fn, 0))
         contribs.append({
             "feature": fn,
             "display_name": _artifacts["feature_descriptions"].get(fn, fn),
-            "value": round(float(inp.get(fn, 0)), 3),
+            "value": round(float(val), 3),
             "importance": round(float(fimp.get(fn, 0)), 4),
         })
     contribs.sort(key=lambda x: x["importance"], reverse=True)
@@ -139,14 +174,15 @@ class handler(BaseHTTPRequestHandler):
                 d = _region_defaults(r)
                 if d:
                     rd = _dataset[_dataset["region"] == r]
+                    avg_score = round(float(rd["risk_score"].mean()), 1)
                     profiles[r] = {
-                        "avg_risk_score": round(float(rd["risk_score"].mean()), 1),
-                        "risk_category": _risk_cat(float(rd["risk_score"].mean())),
+                        "avg_risk_score": avg_score,
+                        "risk_category": _region_risk_cat(avg_score),
                         "data_years": int(rd["year"].nunique()),
                     }
             return self._send(200, {"regions": profiles, "total": len(profiles)})
         if path.startswith("/region/") and path.endswith("/history"):
-            region = path.split("/")[2]
+            region = unquote(path.split("/")[2])
             _load()
             rd = _dataset[_dataset["region"] == region].sort_values("year")
             return self._send(200, {"region": region, "data": rd.to_dict(orient="records")})
@@ -179,7 +215,7 @@ class handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path.replace("/api", "")
         body = self._json_body()
         if path == "/predict":
-            return self._send(200, {"region": body["region"], "year": body.get("year", 2024), "prediction": _predict(body)})
+            return self._send(200, {"region": body["region"], "year": body.get("year", 2026), "prediction": _predict(body)})
         if path == "/scenario":
             base = body.get("base_input", {})
             mods = body.get("modifications", {})
@@ -193,7 +229,7 @@ class handler(BaseHTTPRequestHandler):
             })
         if path == "/compare":
             regions = body.get("regions", [])
-            year = body.get("year", 2024)
+            year = body.get("year", 2026)
             results = []
             for r in regions:
                 d = _region_defaults(r)
@@ -208,7 +244,7 @@ class handler(BaseHTTPRequestHandler):
                              "risk_category": r["prediction"]["risk_category"]} for i, r in enumerate(results)],
             })
         if path == "/early-warning":
-            threshold = body.get("threshold", 60)
+            threshold = body.get("threshold", 33)
             warnings = []
             for r in _artifacts["regions"]:
                 d = _region_defaults(r)

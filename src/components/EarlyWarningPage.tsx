@@ -9,7 +9,7 @@ interface Warning {
 }
 
 export default function EarlyWarningPage() {
-  const [threshold, setThreshold] = useState(60);
+  const [threshold, setThreshold] = useState(35);
   const [result, setResult] = useState<{ threshold: number; total_warnings: number; warnings: Warning[] } | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -53,7 +53,7 @@ export default function EarlyWarningPage() {
               onChange={(e) => setThreshold(parseInt(e.target.value))}
               className="w-full h-2 bg-[#E0E0E0] rounded-full appearance-none cursor-pointer accent-[#000000]" />
             <div className="flex justify-between text-xs text-[#6F6F6F] mt-1" style={{ fontFamily: "'Inter', sans-serif" }}>
-              <span>0 (No risk)</span><span>50 (Moderate)</span><span>100 (Extreme)</span>
+              <span>0 (Low)</span><span>35 (High)</span><span>60 (Extreme)</span>
             </div>
           </div>
           <button onClick={run} disabled={loading}

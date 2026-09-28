@@ -1,7 +1,12 @@
 {
-  "r2": 0.924,
-  "mae": 2.815,
-  "train_size": 480,
-  "test_size": 120,
+  "r2": 0.975,
+  "mae": 0.728,
+  "rmse": 1.179,
+  "train_size": 1472,
+  "test_size": 368,
+  "total_records": 1840,
+  "regions_count": 40,
+  "year_min": 1981,
+  "year_max": 2026,
   "model_type": "GradientBoosting"
 }

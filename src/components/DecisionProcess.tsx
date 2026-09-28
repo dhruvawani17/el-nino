@@ -39,12 +39,12 @@ function buildDecisionTree(features: FeatureImp[]): TreeNode[] {
     }
     const f = top[featureIdx];
     const thresholds: Record<string, number> = {
-      oni_value: 1.2, drought_index: 0.55, rainfall_deviation: -0.2,
-      agricultural_loss_pct: 15, crop_production_index: 95,
-      malnutrition_pct: 25, food_security_index: 55,
-      infant_mortality_rate: 35, stunting_pct: 30,
-      temperature_anomaly: 0.3, crop_yield_tons_ha: 2.2,
-      irrigation_coverage_pct: 50,
+      oni_value: 0.5, drought_index: 0.50, rainfall_deviation: -0.15,
+      agricultural_loss_pct: 11.0, crop_production_index: 95.0,
+      malnutrition_pct: 31.0, food_security_index: 83.5,
+      infant_mortality_rate: 42.0, stunting_pct: 37.0,
+      temperature_anomaly: 0.1, crop_yield_tons_ha: 2.4,
+      irrigation_coverage_pct: 56.0,
     };
     const thr = thresholds[f.name] || 0.5;
     const leftPred = Math.min(100, predBase + 8 + Math.round(f.importance * 20));

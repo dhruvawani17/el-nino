@@ -50,13 +50,13 @@ export async function runScenario(baseInput: Record<string, unknown>, modificati
 export async function compareRegions(regions: string[], year?: number) {
   return request('/compare', {
     method: 'POST',
-    body: JSON.stringify({ regions, year: year || 2024 }),
+    body: JSON.stringify({ regions, year: year || 2026 }),
   });
 }
 
 export async function earlyWarning(threshold: number, year?: number) {
   return request('/early-warning', {
     method: 'POST',
-    body: JSON.stringify({ threshold, year: year || 2024 }),
+    body: JSON.stringify({ threshold, year: year || 2026 }),
   });
 }

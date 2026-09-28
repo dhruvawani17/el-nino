@@ -36,10 +36,8 @@ export default function ScenarioPage() {
     setLoading(true);
     try {
       const base: Record<string, unknown> = {
-        region, year: 2024, oni_value: 0, rainfall_deviation: 0,
-        temperature_anomaly: 0, drought_index: 0.5, crop_production_index: 100,
-        crop_yield_tons_ha: 2.5, agricultural_loss_pct: 5, irrigation_coverage_pct: 50,
-        malnutrition_pct: 20, food_security_index: 70, infant_mortality_rate: 30, stunting_pct: 25,
+        region,
+        year: 2026,
       };
       const data = await runScenario(base, mods);
       setResult(data);

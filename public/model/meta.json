@@ -1,23 +1,43 @@
 {
   "regions": [
     "Andhra Pradesh",
+    "Arunachal Pradesh",
     "Assam",
     "Bihar",
     "Chhattisgarh",
+    "Delhi",
     "Goa",
     "Gujarat",
+    "Gujarat North",
+    "Gujarat South",
     "Haryana",
+    "Himachal Pradesh",
+    "Jammu and Kashmir",
     "Jharkhand",
     "Karnataka",
+    "Karnataka North",
     "Kerala",
+    "Ladakh",
     "Madhya Pradesh",
     "Maharashtra",
+    "Maharashtra East",
+    "Maharashtra West",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
     "Odisha",
     "Punjab",
     "Rajasthan",
+    "Rajasthan East",
+    "Rajasthan West",
+    "Sikkim",
     "Tamil Nadu",
     "Telangana",
+    "Tripura",
     "Uttar Pradesh",
+    "Uttar Pradesh East",
+    "Uttar Pradesh West",
     "Uttarakhand",
     "West Bengal"
   ],
@@ -35,5 +55,39 @@
     "infant_mortality_rate",
     "stunting_pct"
   ],
+  "descriptions": {
+    "oni_value": "El Nino / ONI Index",
+    "rainfall_deviation": "Rainfall Deviation",
+    "temperature_anomaly": "Temperature Anomaly",
+    "drought_index": "Drought Severity Index",
+    "crop_production_index": "Crop Production Index",
+    "crop_yield_tons_ha": "Crop Yield (tons/ha)",
+    "agricultural_loss_pct": "Agricultural Loss (%)",
+    "irrigation_coverage_pct": "Irrigation Coverage (%)",
+    "malnutrition_pct": "Child Malnutrition (%)",
+    "food_security_index": "Food Security Index",
+    "infant_mortality_rate": "Infant Mortality (per 1000)",
+    "stunting_pct": "Child Stunting (%)"
+  },
+  "groups": {
+    "Climate": [
+      "oni_value",
+      "rainfall_deviation",
+      "temperature_anomaly",
+      "drought_index"
+    ],
+    "Agriculture": [
+      "crop_production_index",
+      "crop_yield_tons_ha",
+      "agricultural_loss_pct",
+      "irrigation_coverage_pct"
+    ],
+    "Health & Food Security": [
+      "malnutrition_pct",
+      "food_security_index",
+      "infant_mortality_rate",
+      "stunting_pct"
+    ]
+  },
   "model_type": "sklearn.GradientBoosting"
 }

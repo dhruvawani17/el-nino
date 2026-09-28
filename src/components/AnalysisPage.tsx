@@ -51,6 +51,7 @@ export default function AnalysisPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showDecision, setShowDecision] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<'all' | 'Low' | 'Moderate' | 'High'>('all');
 
   useEffect(() => {
     getRegions().then((d) => setRegions(d.regions)).catch(() => {});
@@ -89,7 +90,7 @@ export default function AnalysisPage() {
     setLoading(true);
     setError('');
     try {
-      const data = await predict({ region, year: 2024, ...inputs });
+      const data = await predict({ region, year: 2026, ...inputs });
       setResult(data.prediction);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Prediction failed');
@@ -152,20 +153,43 @@ export default function AnalysisPage() {
         <div className="grid lg:grid-cols-12 gap-6">
           {/* Region Selector */}
           <div className="lg:col-span-2">
-            <h3 className="text-xs font-medium text-[#6F6F6F] mb-3 uppercase tracking-wider" style={{ fontFamily: interFont }}>Regions</h3>
-            <div className="space-y-1 max-h-[520px] overflow-y-auto pr-1">
-              {Object.entries(regions).map(([name, profile]) => (
-                <button key={name} onClick={() => loadRegion(name)}
-                  className={"w-full text-left px-3 py-2.5 rounded-lg text-xs transition-all cursor-pointer " + (region === name ? "bg-[#000] text-white" : "hover:bg-[#F5F5F5] text-[#6F6F6F]")}
-                  style={{ fontFamily: interFont }}>
-                  <div className="flex items-center justify-between">
-                    <span>{name}</span>
-                    <span className={"text-[10px] px-1.5 py-0.5 rounded-full " + (region === name ? "bg-white/20 text-white" : riskColor(profile.risk_category))}>
-                      {profile.risk_category}
-                    </span>
-                  </div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-medium text-[#6F6F6F] uppercase tracking-wider" style={{ fontFamily: interFont }}>Regions</h3>
+              <span className="text-[10px] text-[#888] font-mono">
+                {Object.entries(regions).filter(([_, p]) => categoryFilter === 'all' || p.risk_category === categoryFilter).length}
+              </span>
+            </div>
+            <div className="flex gap-1 mb-2.5">
+              {(['all', 'Low', 'Moderate', 'High'] as const).map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setCategoryFilter(cat)}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all cursor-pointer ${
+                    categoryFilter === cat
+                      ? 'bg-[#000000] text-white'
+                      : 'bg-[#F5F5F5] text-[#6F6F6F] hover:text-[#000000]'
+                  }`}
+                  style={{ fontFamily: interFont }}
+                >
+                  {cat === 'all' ? 'All' : cat}
                 </button>
               ))}
+            </div>
+            <div className="space-y-1 max-h-[500px] overflow-y-auto pr-1">
+              {Object.entries(regions)
+                .filter(([_, profile]) => categoryFilter === 'all' || profile.risk_category === categoryFilter)
+                .map(([name, profile]) => (
+                  <button key={name} onClick={() => loadRegion(name)}
+                    className={"w-full text-left px-3 py-2.5 rounded-lg text-xs transition-all cursor-pointer " + (region === name ? "bg-[#000] text-white" : "hover:bg-[#F5F5F5] text-[#6F6F6F]")}
+                    style={{ fontFamily: interFont }}>
+                    <div className="flex items-center justify-between">
+                      <span className="truncate pr-1">{name}</span>
+                      <span className={"text-[10px] px-1.5 py-0.5 rounded-full shrink-0 " + (region === name ? "bg-white/20 text-white" : riskColor(profile.risk_category))}>
+                        {profile.risk_category}
+                      </span>
+                    </div>
+                  </button>
+                ))}
             </div>
           </div>
 
