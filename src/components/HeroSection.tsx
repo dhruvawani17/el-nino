@@ -45,6 +45,7 @@ export default function HeroSection({ onNavigate }: Props) {
         <div className="hidden md:flex items-center gap-6">
           {[
             { label: 'Risk Analysis', page: 'analysis' },
+            { label: '3-Year AI Forecast', page: 'forecast' },
             { label: 'Scenario', page: 'scenario' },
             { label: 'Compare', page: 'compare' },
             { label: 'Early Warning', page: 'warning' },
@@ -55,8 +56,13 @@ export default function HeroSection({ onNavigate }: Props) {
               {n.label}
             </button>
           ))}
+          <button onClick={() => go('forecast')}
+            className="rounded-full px-5 py-2.5 text-sm bg-gradient-to-r from-emerald-600 to-teal-600 text-white transition-transform hover:scale-[1.03] cursor-pointer shadow-sm flex items-center gap-1.5 font-medium"
+            style={{ fontFamily: "'Inter', sans-serif" }}>
+            <span>🔮 3-Year Outlook</span>
+          </button>
           <button onClick={() => go('analysis')}
-            className="rounded-full px-6 py-2.5 text-sm bg-[#000000] text-white transition-transform hover:scale-[1.03] cursor-pointer"
+            className="rounded-full px-5 py-2.5 text-sm bg-[#000000] text-white transition-transform hover:scale-[1.03] cursor-pointer"
             style={{ fontFamily: "'Inter', sans-serif" }}>
             Start Analysis
           </button>

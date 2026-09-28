@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import HeroSection from './components/HeroSection';
 import AnalysisPage from './components/AnalysisPage';
+import ForecastPage from './components/ForecastPage';
 import ScenarioPage from './components/ScenarioPage';
 import ComparisonPage from './components/ComparisonPage';
 import EarlyWarningPage from './components/EarlyWarningPage';
 
-type Page = 'home' | 'analysis' | 'scenario' | 'compare' | 'warning';
+type Page = 'home' | 'analysis' | 'forecast' | 'scenario' | 'compare' | 'warning';
 
 const NAV = [
   { id: 'home' as Page, label: 'Home' },
   { id: 'analysis' as Page, label: 'Risk Analysis' },
+  { id: 'forecast' as Page, label: '3-Year AI Forecast' },
   { id: 'scenario' as Page, label: 'Scenario' },
   { id: 'compare' as Page, label: 'Compare' },
   { id: 'warning' as Page, label: 'Early Warning' },
@@ -17,6 +19,12 @@ const NAV = [
 
 export default function App() {
   const [page, setPage] = useState<Page>('home');
+  const [selectedForecastRegion, setSelectedForecastRegion] = useState<string>('Bihar');
+
+  const navigateToForecast = (reg: string) => {
+    setSelectedForecastRegion(reg);
+    setPage('forecast');
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -53,7 +61,8 @@ export default function App() {
 
       {/* Pages */}
       {page === 'home' && <HeroSection onNavigate={(p) => setPage(p as Page)} />}
-      {page === 'analysis' && <AnalysisPage />}
+      {page === 'analysis' && <AnalysisPage onNavigateToForecast={navigateToForecast} />}
+      {page === 'forecast' && <ForecastPage initialRegion={selectedForecastRegion} />}
       {page === 'scenario' && <ScenarioPage />}
       {page === 'compare' && <ComparisonPage />}
       {page === 'warning' && <EarlyWarningPage />}

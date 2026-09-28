@@ -42,7 +42,11 @@ const INPUT_FIELDS = [
   { key: 'stunting_pct', label: 'Stunting %', step: 1, min: 10, max: 60, desc: 'Under age 5' },
 ];
 
-export default function AnalysisPage() {
+interface AnalysisPageProps {
+  onNavigateToForecast?: (region: string) => void;
+}
+
+export default function AnalysisPage({ onNavigateToForecast }: AnalysisPageProps) {
   const [regions, setRegions] = useState<Record<string, RegionProfile>>({});
   const [region, setRegion] = useState('');
   const [inputs, setInputs] = useState<Record<string, number>>({});
@@ -220,6 +224,15 @@ export default function AnalysisPage() {
               style={{ fontFamily: interFont }}>
               {loading ? 'Running...' : 'Run Risk Prediction'}
             </button>
+            {region && (
+              <button
+                onClick={() => onNavigateToForecast?.(region)}
+                className="w-full mt-2 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white text-xs font-semibold transition-all hover:scale-[1.01] cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+                style={{ fontFamily: interFont }}
+              >
+                <span>🔮 Predict Next 3 Years &rarr;</span>
+              </button>
+            )}
             {error && <p className="text-xs text-red-500 mt-2" style={{ fontFamily: interFont }}>{error}</p>}
           </div>
 

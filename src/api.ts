@@ -60,3 +60,11 @@ export async function earlyWarning(threshold: number, year?: number) {
     body: JSON.stringify({ threshold, year: year || 2026 }),
   });
 }
+
+export async function get3YearForecast(region: string) {
+  return request('/forecast-3yr', {
+    method: 'POST',
+    body: JSON.stringify({ region }),
+  });
+}
+
