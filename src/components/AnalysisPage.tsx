@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { getRegions, predict, getRegionHistory } from '../api';
+import { LATEST_REGION_DATA_2026 } from '../data/regionalRiskData';
 import RiskGauge from './charts/RiskGauge';
 import RadarChart from './charts/RadarChart';
 import AnimatedNumber from './charts/AnimatedNumber';
 import DecisionProcess from './DecisionProcess';
+import IndiaRiskMap from './map/IndiaRiskMap';
 
 interface RegionProfile {
   avg_risk_score: number;
@@ -43,10 +45,11 @@ const INPUT_FIELDS = [
 ];
 
 interface AnalysisPageProps {
+  initialRegion?: string;
   onNavigateToForecast?: (region: string) => void;
 }
 
-export default function AnalysisPage({ onNavigateToForecast }: AnalysisPageProps) {
+export default function AnalysisPage({ initialRegion, onNavigateToForecast }: AnalysisPageProps) {
   const [regions, setRegions] = useState<Record<string, RegionProfile>>({});
   const [region, setRegion] = useState('');
   const [inputs, setInputs] = useState<Record<string, number>>({});
@@ -55,6 +58,7 @@ export default function AnalysisPage({ onNavigateToForecast }: AnalysisPageProps
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showDecision, setShowDecision] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'Low' | 'Moderate' | 'High'>('all');
 
   useEffect(() => {
@@ -65,29 +69,56 @@ export default function AnalysisPage({ onNavigateToForecast }: AnalysisPageProps
     setRegion(r);
     setLoading(true);
     setError('');
+
+    // Immediate cached values for zero latency
+    const cached = LATEST_REGION_DATA_2026[r];
+    if (cached) {
+      setInputs({
+        oni_value: cached.oni_value,
+        rainfall_deviation: cached.rainfall_deviation,
+        temperature_anomaly: cached.temperature_anomaly,
+        drought_index: cached.drought_index,
+        crop_production_index: cached.crop_production_index,
+        crop_yield_tons_ha: cached.crop_yield_tons_ha,
+        agricultural_loss_pct: cached.agricultural_loss_pct,
+        irrigation_coverage_pct: cached.irrigation_coverage_pct,
+        malnutrition_pct: cached.malnutrition_pct,
+        food_security_index: cached.food_security_index,
+        infant_mortality_rate: cached.infant_mortality_rate,
+        stunting_pct: cached.stunting_pct,
+      });
+    }
+
     try {
       const hist = await getRegionHistory(r);
-      const latest = hist.data[hist.data.length - 1];
-      setHistory(hist.data);
-      setInputs({
-        oni_value: latest.oni_value,
-        rainfall_deviation: latest.rainfall_deviation,
-        temperature_anomaly: latest.temperature_anomaly,
-        drought_index: latest.drought_index,
-        crop_production_index: latest.crop_production_index,
-        crop_yield_tons_ha: latest.crop_yield_tons_ha,
-        agricultural_loss_pct: latest.agricultural_loss_pct,
-        irrigation_coverage_pct: latest.irrigation_coverage_pct,
-        malnutrition_pct: latest.malnutrition_pct,
-        food_security_index: latest.food_security_index,
-        infant_mortality_rate: latest.infant_mortality_rate,
-        stunting_pct: latest.stunting_pct,
-      });
+      if (hist && hist.data && hist.data.length > 0) {
+        const latest = hist.data[hist.data.length - 1];
+        setHistory(hist.data);
+        setInputs({
+          oni_value: latest.oni_value,
+          rainfall_deviation: latest.rainfall_deviation,
+          temperature_anomaly: latest.temperature_anomaly,
+          drought_index: latest.drought_index,
+          crop_production_index: latest.crop_production_index,
+          crop_yield_tons_ha: latest.crop_yield_tons_ha,
+          agricultural_loss_pct: latest.agricultural_loss_pct,
+          irrigation_coverage_pct: latest.irrigation_coverage_pct,
+          malnutrition_pct: latest.malnutrition_pct,
+          food_security_index: latest.food_security_index,
+          infant_mortality_rate: latest.infant_mortality_rate,
+          stunting_pct: latest.stunting_pct,
+        });
+      }
     } catch {
-      setError('Failed to load region data');
+      // Fallback already in place
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    const target = initialRegion || 'Bihar';
+    loadRegion(target);
+  }, [initialRegion]);
 
   const runAnalysis = async () => {
     if (!region) return;
@@ -143,14 +174,22 @@ export default function AnalysisPage({ onNavigateToForecast }: AnalysisPageProps
               Select a region, adjust indicators, and run the ML prediction engine.
             </p>
           </div>
-          <button onClick={() => setShowDecision(true)}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl border border-[#E8E8E8] bg-white hover:bg-[#F5F5F5] transition-all cursor-pointer group shrink-0 mt-8"
-            style={{ fontFamily: interFont }}>
-            <svg className="w-4 h-4 text-[#6F6F6F] group-hover:text-[#000] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-            </svg>
-            <span className="text-sm text-[#6F6F6F] group-hover:text-[#000] transition-colors">Show Decision Process</span>
-          </button>
+          <div className="flex items-center gap-2 mt-8 shrink-0">
+            <button onClick={() => setShowMapModal(true)}
+              className="flex items-center gap-2 px-4 py-3 rounded-xl border border-[#E8E8E8] bg-white hover:bg-black hover:text-white transition-all cursor-pointer group"
+              style={{ fontFamily: interFont }}>
+              <span>🗺️</span>
+              <span className="text-sm font-medium">Select on India Map</span>
+            </button>
+            <button onClick={() => setShowDecision(true)}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl border border-[#E8E8E8] bg-white hover:bg-[#F5F5F5] transition-all cursor-pointer group"
+              style={{ fontFamily: interFont }}>
+              <svg className="w-4 h-4 text-[#6F6F6F] group-hover:text-[#000] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+              </svg>
+              <span className="text-sm text-[#6F6F6F] group-hover:text-[#000] transition-colors">Show Decision Process</span>
+            </button>
+          </div>
         </div>
 
         {/* Main Grid - Top Row */}
@@ -158,7 +197,16 @@ export default function AnalysisPage({ onNavigateToForecast }: AnalysisPageProps
           {/* Region Selector */}
           <div className="lg:col-span-2">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs font-medium text-[#6F6F6F] uppercase tracking-wider" style={{ fontFamily: interFont }}>Regions</h3>
+              <div className="flex items-center gap-1.5">
+                <h3 className="text-xs font-medium text-[#6F6F6F] uppercase tracking-wider" style={{ fontFamily: interFont }}>Regions</h3>
+                <button
+                  onClick={() => setShowMapModal(true)}
+                  className="text-[10px] px-1.5 py-0.5 rounded bg-[#EEEEEE] hover:bg-black hover:text-white font-medium transition-colors cursor-pointer"
+                  title="Open India Risk Map"
+                >
+                  🗺️ Map
+                </button>
+              </div>
               <span className="text-[10px] text-[#888] font-mono">
                 {Object.entries(regions).filter(([_, p]) => categoryFilter === 'all' || p.risk_category === categoryFilter).length}
               </span>
@@ -434,6 +482,39 @@ export default function AnalysisPage({ onNavigateToForecast }: AnalysisPageProps
             </div>
           );
         })()}
+
+        {/* India Map Selector Modal */}
+        {showMapModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-white rounded-3xl p-6 max-w-4xl w-full max-h-[92vh] overflow-y-auto border border-[#E5E5E5] shadow-2xl relative">
+              <div className="flex items-center justify-between pb-4 border-b border-[#EEE] mb-4">
+                <div>
+                  <h3 className="text-2xl font-normal text-black" style={{ fontFamily: serifFont }}>
+                    Select Region on India Risk Map
+                  </h3>
+                  <p className="text-xs text-[#6F6F6F]" style={{ fontFamily: interFont }}>
+                    Hover to inspect multi-sector risk metrics. Click any state to immediately load its data into the analysis engine.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowMapModal(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#EEE] text-black font-bold cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <IndiaRiskMap
+                compact
+                initialState={region}
+                onSelectRegion={(reg) => {
+                  loadRegion(reg);
+                  setShowMapModal(false);
+                }}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

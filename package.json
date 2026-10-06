@@ -10,6 +10,7 @@
     "train": "python3 scripts/train.py"
   },
   "dependencies": {
+    "lucide-react": "^1.52.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
